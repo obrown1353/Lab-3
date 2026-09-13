@@ -10,6 +10,8 @@
 
 10. To keep x and y in there original orientation while still seeing the top of the cubes, you would change the lookAt() function to make it see the z axis. 
 
+
+
 Oliver Brown
 Completed 9/13/26
 I learned the differences between moving models and the camera, and how to change the 
