@@ -170,7 +170,8 @@ window.onload = function init() {
 
 
 	//Set up projection matrix
-	projectionMatrix=perspective(45.0, 1.0, 0.1, 100.0);
+	//projectionMatrix=perspective(45.0, canvas.width/canvas.height, 0.1, 100.0);
+	projectionMatrix=ortho(-2.0, 2.0, -2.0, 2.0, 0.1, 100.0);
 	gl.uniformMatrix4fv( projectionMatrixLoc, false, flatten(projectionMatrix) );
 
     render();
@@ -184,14 +185,26 @@ function render() {
 
 	gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 	
+	
 	//Set initial view
 	var eye = vec3(0.0, 0.0, 10.0);
 	var at =  vec3(0.0, 0.0, 0.0);
 	var up =  vec3(0.0, 1.0, 0.0);
 
-	modelViewMatrix = lookAt(eye,at,up);
+	modelViewMatrix = lookAt(eye, at, up);
+	modelViewMatrix = mult(modelViewMatrix, rotateX(45.0));
     gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );
+
+	modelViewMatrix = mult(modelViewMatrix, translate(1.0, 0.0, 0.0));
+	gl.drawArrays(shapes.axes.type, shapes.axes.start, shapes.axes.size);
+	gl.drawArrays(shapes.wireCube.type, shapes.wireCube.start, shapes.wireCube.size);
+	gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );
+
+	modelViewMatrix = mult(modelViewMatrix, translate(1.0, 1.0, 0.0));
+	modelViewMatrix = mult(modelViewMatrix, rotateY(45.0));
+	gl.drawArrays(shapes.wireCube.type, shapes.wireCube.start, shapes.wireCube.size);
+
+
 	
-	gl.drawArrays(shapes.axes.type, shapes.axes.start, shapes.axes.size);	
     requestAnimationFrame(render);
 }
