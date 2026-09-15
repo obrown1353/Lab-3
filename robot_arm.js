@@ -18,7 +18,8 @@ var projectionMatrix  = mat4();
 var modelViewMatrixLoc, projectionMatrixLoc;
 
 //Model state variables
-var shoulder = 0, elbow = 0;
+var shoulder = 0, elbow = 0, finger = 0;
+var armShape;
 
 
 //----------------------------------------------------------------------------
@@ -127,6 +128,7 @@ function loadShape(myShape, type)
 
 window.onload = function init() {
    canvas = document.getElementById( "gl-canvas" );
+   armShape = shapes.wireCube;
 
     gl = WebGLUtils.setupWebGL( canvas );
     if ( !gl ) { alert( "WebGL isn't available" ); }
@@ -222,7 +224,6 @@ function animate()
 function render() {
 	gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 	
-   var armShape = shapes.wireCube;
    var matStack = [];
 	
 	//Save view transform
@@ -257,7 +258,81 @@ function render() {
 		//Undo Scale
 		modelViewMatrix = matStack.pop();
 
-    //Restore modelViewMatrix to initial state
+      //Position hand at the end of the forearm
+      modelViewMatrix = mult(modelViewMatrix, translate(1.0, 0.0, 0.0));
+
+      //finger 1
+      matStack.push(modelViewMatrix);
+         modelViewMatrix = mult(modelViewMatrix, rotate(-finger, vec3(0, 0, 1)));
+         modelViewMatrix = mult(modelViewMatrix, translate(0.15, 0.35, 0.0));
+         modelViewMatrix = mult(modelViewMatrix, rotate(45, vec3(0, 0, 1)));
+         modelViewMatrix = mult(modelViewMatrix, scalem(0.45, 0.15, 0.12));
+         gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );
+         gl.drawArrays(armShape.type, armShape.start, armShape.size);
+      modelViewMatrix = matStack.pop();
+
+      matStack.push(modelViewMatrix);
+         modelViewMatrix = mult(modelViewMatrix, rotate(-finger, vec3(0, 0, 1)));
+         modelViewMatrix = mult(modelViewMatrix, translate(0.55, 0.50, 0.0));
+         modelViewMatrix = mult(modelViewMatrix, scalem(0.40, 0.15, 0.12));
+         gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );
+         gl.drawArrays(armShape.type, armShape.start, armShape.size);
+      modelViewMatrix = matStack.pop();
+
+        //finger 2
+      matStack.push(modelViewMatrix);
+         modelViewMatrix = mult(modelViewMatrix, rotate(-finger, vec3(0, 0, 1)));
+         modelViewMatrix = mult(modelViewMatrix, translate(0.25, 0.35, -0.5));
+         modelViewMatrix = mult(modelViewMatrix, rotate(45, vec3(0, 0, 1)));
+         modelViewMatrix = mult(modelViewMatrix, scalem(0.45, 0.15, 0.12));
+         gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );
+         gl.drawArrays(armShape.type, armShape.start, armShape.size);
+      modelViewMatrix = matStack.pop();
+
+      matStack.push(modelViewMatrix);
+         modelViewMatrix = mult(modelViewMatrix, rotate(-finger, vec3(0, 0, 1)));
+         modelViewMatrix = mult(modelViewMatrix, translate(0.68, 0.50, -0.5));
+         modelViewMatrix = mult(modelViewMatrix, scalem(0.40, 0.15, 0.12));
+         gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );
+         gl.drawArrays(armShape.type, armShape.start, armShape.size);
+      modelViewMatrix = matStack.pop();
+
+        //finger 3
+      matStack.push(modelViewMatrix);
+         modelViewMatrix = mult(modelViewMatrix, rotate(-finger, vec3(0, 0, 1)));
+         modelViewMatrix = mult(modelViewMatrix, translate(0.25, 0.35, -1));
+         modelViewMatrix = mult(modelViewMatrix, rotate(45, vec3(0, 0, 1)));
+         modelViewMatrix = mult(modelViewMatrix, scalem(0.45, 0.15, 0.12));
+         gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );
+         gl.drawArrays(armShape.type, armShape.start, armShape.size);
+      modelViewMatrix = matStack.pop();
+
+      matStack.push(modelViewMatrix);
+         modelViewMatrix = mult(modelViewMatrix, rotate(-finger, vec3(0, 0, 1)));
+         modelViewMatrix = mult(modelViewMatrix, translate(0.68, 0.50, -1));
+         modelViewMatrix = mult(modelViewMatrix, scalem(0.40, 0.15, 0.12));
+         gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );
+         gl.drawArrays(armShape.type, armShape.start, armShape.size);
+      modelViewMatrix = matStack.pop();
+
+      //Thumb
+      matStack.push(modelViewMatrix);
+         modelViewMatrix = mult(modelViewMatrix, rotate(finger, vec3(0, 0, 1)));
+         modelViewMatrix = mult(modelViewMatrix, translate(0.25, -0.40, 0.0));
+         modelViewMatrix = mult(modelViewMatrix, rotate(-45, vec3(0, 0, 1)));
+         modelViewMatrix = mult(modelViewMatrix, scalem(0.45, 0.15, 0.12));
+         gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );
+         gl.drawArrays(armShape.type, armShape.start, armShape.size);
+      modelViewMatrix = matStack.pop();
+
+      matStack.push(modelViewMatrix);
+         modelViewMatrix = mult(modelViewMatrix, rotate(finger, vec3(0, 0, 1)));
+         modelViewMatrix = mult(modelViewMatrix, translate(0.65, -0.55, 0.0));
+         modelViewMatrix = mult(modelViewMatrix, scalem(0.40, 0.15, 0.12));
+         gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );
+         gl.drawArrays(armShape.type, armShape.start, armShape.size);
+      modelViewMatrix = matStack.pop();
+
 	modelViewMatrix = matStack.pop();
 	
 }
@@ -277,6 +352,9 @@ var shift;
 document.onkeydown = function handleKeyDown(event) {
    currentlyPressedKeys[event.keyCode] = true;
    shift = event.shiftKey;
+
+   if (event.key === "t") armShape = shapes.solidCube;
+   if (event.key === "T") armShape = shapes.wireCube;
 
    //Get unshifted key character
    var c = event.keyCode;
@@ -318,7 +396,17 @@ function handleKeys(timePassed)
    //Calculate how much to move based on time since last update
    var s = 90.0; //rotation speed in degrees per second
    var d = s*timePassed; //degrees to rotate on this frame
-   
+
+   if(shift && isPressed("F")){
+      if(finger < 35) finger = (finger + d);
+      else finger = 35;
+   }
+
+   if(!shift && isPressed("F")){
+      if(finger > 0) finger = (finger - d);
+      else finger = 0;
+   }
+
    //Shoulder Updates
    if (shift && isPressed("S")) 
    {
